@@ -1,0 +1,142 @@
+django-admin startproject weather_app_backend
+cd weather_app_backend
+python manage.py startapp weather
+
+pip install djangorestframework requests
+
+INSTALLED_APPS = [
+    ...
+    'rest_framework',
+    'weather',
+]
+
+import requests
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+class WeatherAPIView(APIView):
+    def get(self, request, city_name):
+        api_key = 'YOUR_API_KEY'  # Replace with your OpenWeatherMap API key
+        url = f"http://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={api_key}&units=metric"
+        response = requests.get(url)
+        if response.status_code == 200:
+            return Response(response.json(), status=status.HTTP_200_OK)
+        return Response({"error": "City not found!"}, status=status.HTTP_404_NOT_FOUND)
+
+from django.urls import path
+from .views import WeatherAPIView
+
+urlpatterns = [
+    path('weather/<str:city_name>/', WeatherAPIView.as_view(), name='weather'),
+]
+
+from django.urls import include, path
+
+urlpatterns = [
+    path('api/', include('weather.urls')),
+]
+
+npx create-react-app weather-app
+cd weather-app
+
+npm install axios
+
+import React, { useState } from 'react';
+import axios from 'axios';
+
+const Weather = () => {
+  const [city, setCity] = useState('');
+  const [weatherData, setWeatherData] = useState(null);
+  const [error, setError] = useState('');
+
+  const getWeather = async () => {
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/weather/${city}/`);
+      setWeatherData(response.data);
+      setError('');
+    } catch (err) {
+      setError('City not found!');
+      setWeatherData(null);
+    }
+  };
+
+  return (
+    <div className="weather-container">
+      <h2>Weather App</h2>
+      <input 
+        type="text" 
+        placeholder="Enter city" 
+        value={city} 
+        onChange={(e) => setCity(e.target.value)} 
+      />
+      <button onClick={getWeather}>Get Weather</button>
+
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      
+      {weatherData && (
+        <div>
+          <h3>{weatherData.name}</h3>
+          <p>Temperature: {weatherData.main.temp}°C</p>
+          <p>Humidity: {weatherData.main.humidity}%</p>
+          <p>Weather: {weatherData.weather[0].description}</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Weather;
+
+import React from 'react';
+import Weather from './components/Weather';
+
+const App = () => {
+  return (
+    <div className="App">
+      <Weather />
+    </div>
+  );
+}
+
+export default App;
+
+python manage.py runserver
+
+npm start
+
+weather_app_backend/
+    manage.py
+    weather_app_backend/
+        settings.py
+        urls.py
+    weather/
+        views.py
+        urls.py
+
+weather-app/
+    public/
+    src/
+        components/
+            Weather.js
+        App.js
+    package.json
+
+weather_app_backend/       <-- Django Project
+    manage.py
+    weather_app_backend/
+        settings.py
+        urls.py
+    weather/
+        views.py
+        urls.py
+
+weather-app/               <-- React Project
+    public/
+    src/
+        components/
+            Weather.js
+        App.js
+    package.json
+
+zip -r weather_project.zip weather_app_backend weather-app
